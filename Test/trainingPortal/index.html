@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Avaleht</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+</head>
+<body>
+<div id="trainings" class="container">
+    <ul class="nav nav-pills">
+        <li class="active"><a data-toggle="pill" href="#home">Lisa uus</a></li>
+        <li><a data-toggle="pill" href="#menu1">Ajalugu</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div id="home" class="tab-pane fade in active">
+            <h3>Lisa uus treening</h3>
+            <div class="form-group" id="add-new">
+                <form ref="new-training-form" v-on:submit="saveTraining()">
+                    <select id="type-select" class="form-control" v-model="newTraining.type">
+                        <option :value="Intervall">Intervall</option>
+                        <option>Sörkjooks</option>
+                        <option>Sprint</option>
+                        <option>Distants</option>
+                    </select>
+                    <input type="date" class="form-control" placeholder="Kuupäev" v-model="newTraining.date">
+                    <input type="text" class="form-control" placeholder="Distants" v-model="newTraining.distance">
+                    <input type="text" class="form-control" placeholder="Aeg" v-model="newTraining.time">
+                    <input type="text" class="form-control" placeholder="Keskmine pulss" v-model="newTraining.pulse">
+                    <textarea class="form-control" placeholder="Kommentaar" v-model="newTraining.comment"></textarea>
+                    <button class="btn btn-success">Salvesta</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="menu1" class="tab-pane fade">
+            <h3>Varasemad treeningud</h3>
+
+            <div class="form-group" id="search-wrapper">
+                <form v-on:submit.prevent="findTrainings()" id="findTrainingsForm">
+                    <input type="date" class="form-control" v-model="oldTraining.date">
+                    <select class="form-control" v-model="oldTraining.type">
+                        <option :value="Intervall">Intervall</option>
+                        <option>Sörkjooks</option>
+                        <option>Sprint</option>
+                        <option>Distants</option>
+                    </select>
+                    <button class="btn btn-success">Otsi</button>
+                    <button class="btn btn-default" @click="clearForm()">Tühista</button>
+                </form>
+            </div>
+            <table id="training-table">
+                <thead>
+                <tr>
+                    <th>Kuupäev</th>
+                    <th>Tüüp</th>
+                    <th>Distants</th>
+                    <th>Aeg</th>
+                    <th>Keskmine pulss</th>
+                    <th>Kommentaar</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr v-for="training in trainings">
+                    <th>{{ training.date }}</th>
+                    <th>{{ training.type }}</th>
+                    <th>{{ training.distance }}</th>
+                    <th>{{ training.time }} </th>
+                    <th>{{ training.pulse }}</th>
+                    <th>{{ training.comment }}</th>
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    var vm = new Vue({
+        el: "#trainings",
+        data: {
+            tab: 0,
+            trainings: [],
+            newTraining: [],
+            oldTraining: [],
+            choose: 'Treening'
+        },
+
+        methods: {
+            changeTabs: function(tab) {
+                this.tab = tab;
+            },
+            saveTraining() {
+                axios.post('http://localhost:8080/trainings/add', {"type": this.newTraining.type, "date": this.newTraining.date,
+                "distance": this.newTraining.distance, "time": this.newTraining.time, "pulse": this.newTraining.pulse,
+                "comment": this.newTraining.comment})
+                .then(response => {
+                    console.log(response);
+                })
+                .catch(e => {
+                  console.log(error);
+                })
+
+            },
+            findTrainings() {
+                axios.post('http://localhost:8080/trainings/params', {"type": this.oldTraining.type, "date": this.oldTraining.date})
+                .then(response => {
+                    this.trainings = response.data
+                    console.log(response.data)
+                })
+                .catch(e => {
+                  console.log(error);
+                })
+            },
+            clearForm() {
+                this.oldTraining.type = "";
+                this.oldTraining.date = "";
+                this.findTrainings();
+
+            }
+
+        },
+
+        mounted() {
+          axios.get('http://localhost:8080/trainings').then(response => {
+            console.log(response.data)
+            this.trainings = response.data
+          })
+        }
+
+    });
+
+</script>
+</body>
+</html>
